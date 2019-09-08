@@ -27,7 +27,7 @@ func (e Err) Error() string {
 
 // Client helps users interact with a ServiceNow instance.
 type Client struct {
-	Username, Password, Instance string
+	Token, Instance string
 }
 
 func sys(param string) string {
@@ -80,7 +80,7 @@ func (c *Client) PerformFor(table, action, id string, opts url.Values, body inte
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	req.SetBasicAuth(c.Username, c.Password)
+	req.SetBasicAuth(c.Token)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
