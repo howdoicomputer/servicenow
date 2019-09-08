@@ -81,6 +81,8 @@ func (c *Client) PerformFor(table, action, id string, opts url.Values, body inte
 		return err
 	}
 
+	fmt.Println(req)
+
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization:Basic", c.Token)
@@ -90,6 +92,8 @@ func (c *Client) PerformFor(table, action, id string, opts url.Values, body inte
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(res.Body)
 
 	defer res.Body.Close()
 
