@@ -78,9 +78,8 @@ func (c *Client) PerformFor(table, action, id string, opts url.Values, body inte
 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization:Basic", c.Token)
 	}
-
-	req.SetBasicAuth(c.Token)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
