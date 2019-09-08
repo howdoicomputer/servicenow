@@ -40,12 +40,15 @@ func sys(param string) string {
 // error.
 func (c *Client) PerformFor(table, action, id string, opts url.Values, body interface{}, out interface{}) error {
 	inst := c.Instance
+	fmt.Println(inst)
 
 	if !httpRE.MatchString(inst) {
 		inst = "https://" + inst
+		fmt.Println(inst)
 	}
 
 	u := fmt.Sprintf("%s/%s.do", inst, table)
+	fmt.Println(u)
 
 	vals := url.Values{
 		"JSONv2":      {""},
@@ -70,6 +73,8 @@ func (c *Client) PerformFor(table, action, id string, opts url.Values, body inte
 			return err
 		}
 	}
+
+	fmt.Println(body)
 
 	req, err := http.NewRequest(meth, u+"?"+vals.Encode(), buf)
 	if err != nil {
