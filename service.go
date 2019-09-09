@@ -1,16 +1,12 @@
 package servicenow
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 )
-
-var httpRE = regexp.MustCompile("^https?://")
 
 // Err represents a possible error message that came back from the server
 type Err struct {
@@ -40,74 +36,32 @@ func sys(param string) string {
 // error.
 func (c *Client) PerformFor(table, action, id string, opts url.Values, body interface{}, out interface{}) error {
 	inst := c.Instance
-	fmt.Println(inst)
 
-	if !httpRE.MatchString(inst) {
-		inst = "https://" + inst
-		fmt.Println(inst)
-	}
-
-	u := fmt.Sprintf("%s/%s.do", inst, table)
-	fmt.Println(u)
-
-	vals := url.Values{
-		"JSONv2":      {""},
-		sys("action"): {action},
-	}
-
-	if id != "" {
-		vals.Set(sys("sys_id"), id)
-		vals.Set("displayvalue", "true")
-	}
-
-	if opts != nil {
-		vals.Set(sys("query"), opts.Encode())
-	}
+	u := fmt.Sprintf("%s/%s", inst, table)
 
 	meth := http.MethodGet
-	buf := &bytes.Buffer{}
 
-	if body != nil {
-		meth = http.MethodPost
-		if err := json.NewEncoder(buf).Encode(body); err != nil {
-			return err
-		}
-	}
-
-	fmt.Println(body)
-
-	req, err := http.NewRequest(meth, u+"?"+vals.Encode(), buf)
+	req, err := http.NewRequest(meth, u+"?"+opts.Encode(), nil)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(req)
-
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization:Basic", c.Token)
-	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", c.Token))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(res.Body)
-
 	defer res.Body.Close()
 
-	buf.Reset()
-
-	// Store JSON so we can do a preliminary error check
-	var echeck Err
-
-	err = json.NewDecoder(io.TeeReader(res.Body, buf)).Decode(&echeck)
-	if err == nil && echeck.Err != "" {
-		return echeck
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	return json.NewDecoder(buf).Decode(out)
+	return json.Unmarshal(data, out)
 }
 
 // GetFor performs a servicenow get to the specified table, with options, and
